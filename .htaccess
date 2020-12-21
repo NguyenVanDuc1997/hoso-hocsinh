@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+
+RewriteEngine on
+RewriteCond %{REQUEST_URI} !^public
+RewriteRule ^(.*)$ public/$1 [L]
+Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+<IfModule mod_php5.c>
+php_value post_max_size 1000M
+php_value upload_max_filesize 1000M
+php_value memory_limit 2048M
+php_value max_execution_time 3000
+php_value max_input_time 3000
+php_value session.gc_maxlifetime 1200
+</IfModule>

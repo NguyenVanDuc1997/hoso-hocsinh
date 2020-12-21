@@ -1,0 +1,424 @@
+@extends('layouts.front')
+
+@section('content')
+<link rel="stylesheet" href="{!! asset('dist/css/bootstrap-multiselect.css') !!}">
+<link rel="stylesheet" href="{!! asset('css/select2.min.css') !!}">
+<!-- Bootstrap 3.3.6 -->
+<link rel="stylesheet" href="{!! asset('bootstrap/css/bootstrap.min.css') !!}"> 
+
+<link rel="stylesheet" href="{!! asset('css/toastr.css') !!}">
+
+<script src="{!! asset('/plugins/jQuery/jquery-2.2.3.min.js') !!}"></script>
+<script src="{!! asset('/js/myScript.js') !!}"></script>
+<!-- datepicker -->
+<script src="{!! asset('/plugins/datepicker/bootstrap-datepicker.js') !!}"></script>
+<script src="{!! asset('js/select2.min.js') !!}"></script>
+<script src="{!! asset('js/toastr.js') !!}"></script>
+<script src="{!! asset('js/utility.js') !!}"></script>
+<script src="{!! asset('/mystyle/js/styleProfile.js') !!}"></script>
+
+<section class="content">
+<script type="text/javascript">
+  $(function () {
+    
+   // GET_INITIAL_NGHILC();
+   // loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+    autocomUpdateSiteProfile();
+    $('#txtStartDate').datepicker({
+      format: 'dd-mm-yyyy',
+      autoclose: true
+    });
+    $("#sltNamHoc").select2({
+      placeholder: "-- Chọn trường học --",
+      allowClear: true,
+    });
+    
+
+    $('#insertSiteProfile').click(function(){
+      
+      if ($('#sltTinh').val() === null || $('#sltTinh').val() === "") {
+        utility.messagehide("messageDangers", 'Vui lòng chọn Tỉnh/ thành', 1, 3000);
+        return;
+      }
+      else {
+        if ($('#sltQuan').val() === null || $('#sltQuan').val() === "") {
+          utility.messagehide("messageDangers", 'Vui lòng chọn Quận/ Huyện', 1, 3000);
+          return;
+        }
+        else {
+          if ($('#sltPhuong').val() === null || $('#sltPhuong').val() === "") {
+            utility.messagehide("messageDangers", 'Vui lòng chọn Xã/ Phường', 1, 3000);
+            return;
+          }
+          else {
+            if ($('#txtStartDate').val() === null || $('#txtStartDate').val() === "") {
+                utility.messagehide("messageDangers", 'Vui lòng chọn ngày hiệu lực', 1, 3000);
+                return;
+              }
+          }
+        }
+      }
+
+      var o = {
+        HISID: hisSite_id,
+        PROFILEID: profile_id_HisSite,
+        CLASSID: $('#sltLopSiteHis').val(),
+        TENTINH: $('#sltTinh').val(), 
+        TENHUYEN: $('#sltQuan').val(), 
+        TENXA: $('#sltPhuong').val(), 
+        TENTHON: $('#txtThonxom').val(), 
+        STARTDATE: $('#txtStartDate').val()
+      }
+
+      PostToServer('/ho-so/insertSiteProfile/profile',o,function(dataget){
+        if(dataget.success != null && dataget.success != '' && dataget.success != undefined){
+          $("#myModalProfile").modal("hide");
+          utility.message("Thông báo",dataget.success,null,3000)
+          GET_INITIAL_NGHILC();
+          loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+        }else if(dataget.error != null && dataget.error != '' && dataget.error != undefined){
+          utility.message("Thông báo",dataget.error,null,3000,1)
+        }
+      },function(result){
+        console.log('insertSiteProfile changeSite: '+ result);
+      },"insertSiteProfile","","");
+    });
+
+    $('select#sltSchoolSiteHis').change(function() {
+      GET_INITIAL_NGHILC();
+      loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+    });
+
+    $('select#sltLopSiteHis').change(function() {
+      if($(this).val() != null && $(this).val() != "" && parseInt($(this).val()) != 0){
+        GET_INITIAL_NGHILC();
+        loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+      }else{
+        $('#dataSite').html("<tr><td colspan='50' class='text-center'>Không tìm thấy dữ liệu</td></tr>");
+      }
+    });
+  if($('#txtSchool_id').val() == '' || $('#txtClass').val() == '' || $('#txtName').val() == ''){
+      // loadComboxTruongHoc("sltSchoolSiteHis", function(){
+      if ($('#sltSchoolSiteHis').val() !== null && $('#sltSchoolSiteHis').val() !== "" && $('#sltSchoolSiteHis').val() > 0) {
+        loadLopBySchoolIDCapNhatHoKhau($('#sltSchoolSiteHis').val());
+        GET_INITIAL_NGHILC();
+        loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+        $('select#sltLopSiteHis').removeAttr('disabled');
+      }
+    //}, $('#school-per').val());
+    }else{
+        $('#txtSearchSiteProfile').val($('#txtName').val());
+       // loadComboxTruongHoc("sltSchoolSiteHis", function(){
+        if ($('#sltSchoolSiteHis').val() !== null && $('#sltSchoolSiteHis').val() !== "" && $('#sltSchoolSiteHis').val() > 0) {
+          loadLopBySchoolIDCapNhatHoKhau($('#sltSchoolSiteHis').val());
+          GET_INITIAL_NGHILC();
+          loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+          $('select#sltLopSiteHis').removeAttr('disabled');
+        }
+     // }, $('#school-per').val());
+    }
+      
+    
+      
+    // $("#sltSchoolSiteHis").select2({
+    //     placeholder: "-- Chọn trường học --",
+    //     allowClear: true,
+    //     focus: open
+    //   });
+
+      $("#sltLopSiteHis").select2({
+        placeholder: "-- Chọn lớp học --",
+        allowClear: true,
+        focus: open
+      });
+      $("#sltThon").select2({
+        placeholder: "-- Chọn thôn xóm --",
+        allowClear: true,
+        focus: open
+      });
+    
+    $('#drPagingRegistration').change(function(){
+        GET_INITIAL_NGHILC();
+        loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+    });
+
+    // $('#btnClosePopupSiteProfile').click(function(){
+    //   GET_INITIAL_NGHILC();
+    //   loadDataRegistration($('#drPagingRegistration').val(), $('#txtSearchSiteProfile').val());
+    // });
+  });
+
+
+  function openModalUpdateSite(type = 0){
+    $('#txtNameProfile').attr('disabled', 'disabled');
+    $('#txtBirthday').attr('disabled', 'disabled');
+    $('#sltDantoc').attr('disabled', 'disabled');
+    $('#txtParent').attr('disabled', 'disabled');
+    $('#sltTruong').attr('disabled', 'disabled');
+    $('#sltLop').attr('disabled', 'disabled');
+    if (type > 0) {
+      $('#insertSiteProfile').show();
+      $('#updateSiteProfile').hide();
+      $('#txtStartDate').removeAttr('disabled');
+    }
+    else {
+      $('#insertSiteProfile').hide();
+      $('#updateSiteProfile').show();
+      $('#txtStartDate').attr('disabled', 'disabled');
+    }
+    $("#myModalProfile").modal("show");
+  }
+   
+ 
+</script>
+<div class="modal fade" id="myModalProfile" role="dialog">
+    <div class="modal-dialog modal-md" style="width: 80%; margin: 10px auto;">
+    
+      <!-- Modal content-->
+      <div class="modal-content box">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+          <h4 class="">Thông tin hộ khẩu học sinh</h4>
+        </div>
+        <form class="form-horizontal" action="" id="formtest">  
+        <input type="hidden" class="form-control" id="txtIdProfile">          
+                <div class="modal-body" style="font-size: 12px;padding: 5px;">
+                    <div class="row" id="group_message" style="padding-left: 10%;padding-right: 10%">
+                      <div id="messageDangers"></div>
+        
+                    </div>
+                    <div class="box-body">
+                <div class="form-group">
+                  
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Họ và tên <font style="color: red">*</font></label>
+
+                  <div class="col-sm-12">
+                    <input type="text" class="form-control" id="txtNameProfile" placeholder="Nhập tên học sinh">
+                  </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Ngày sinh <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <input type="text" class="form-control" id="txtBirthday" placeholder="ngày-tháng-năm">
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Dân tộc <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltDantoc" id="sltDantoc"  class="form-control" style="width: 100% !important">
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-12 ">Chủ hộ<font style="color: red">*</font></label>
+    
+                    <div class="col-sm-12">
+                      <input type="text" class="form-control" id="txtParent" placeholder="Nhập cha mẹ hoặc người giám hộ" autocomplete="on">
+                    </div>
+                  </div>
+                  
+                </div>
+                <div class="form-group">
+                  
+                  
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-12 ">Trường <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltTruong" id="sltTruong"  class="form-control" style="width: 100% !important">
+                        <option value="">--Chọn trường--</option>
+                    </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Lớp học <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12" >
+                      <select name="sltLop" disabled="disabled" id="sltLop"  class="form-control" style="width: 100% !important">
+                          <option value="">--Chọn lớp--</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Tỉnh/thành <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltTinh" id="sltTinh" class="form-control selectpicker" data-live-search="true" style="width: 100% !important">
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Quận/huyện <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltQuan" disabled="disabled" id="sltQuan"  class="form-control selectpicker" data-live-search="true" style="width: 100% !important">
+                          
+                      </select>
+                    </div>
+                  </div>
+                  <!-- <div class="col-sm-3" style="padding-left: 0" id="dirDoiTuong">
+                    <label  class="col-sm-12 ">Thuộc đối tượng <span id="url_hocsinh"></span></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltDoituong" id="sltDoituong" multiple="multiple" class="form-control">
+
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Năm nhập học <font style="color: red">*</font></label>
+                    <div class="col-sm-12">
+                      <input type="text" class="form-control" id="txtYearProfile" name="txtYearProfile" placeholder="tháng-năm">
+                    </div>
+                  </div> -->
+                </div>
+                <div class="form-group">
+
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Phường/xã <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <select name="sltPhuong" disabled="disabled" id="sltPhuong" class="form-control selectpicker" data-live-search="true" style="width: 100% !important">
+                       
+                      </select>
+                    </div>
+                  </div>
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Thôn xóm </label>
+
+                    <div class="col-sm-12">
+                      <select name="txtThonxom" disabled="disabled" id="txtThonxom" class="form-control selectpicker" data-live-search="true" style="width: 100% !important">
+                       
+                      </select>
+                    </div>
+                  </div>
+                   
+                  <div class="col-sm-3" style="padding-left: 0">
+                    <label  class="col-sm-6 ">Ngày hiệu lực <font style="color: red">*</font></label>
+
+                    <div class="col-sm-12">
+                      <input type="text" name="txtStartDate" id="txtStartDate" class="form-control" placeholder="Nhập ngày hiệu lực">
+                    </div>
+                  </div>
+                </div>
+               </div></div>
+          
+                <div class="modal-footer">
+                    <div class="row text-center">
+                        <button type="button" data-loading-text="Đang tải dữ liệu" class="btn btn-primary" id ="updateSiteProfile">Sửa</button>
+                        <button type="button" data-loading-text="Đang tải dữ liệu" class="btn btn-primary" id ="insertSiteProfile">Cập nhật</button>
+                        <button type="button" class="btn btn-primary" id="btnClosePopupSiteProfile" data-dismiss="modal">Đóng</button>
+                    </div>
+                </div>
+            </form>   
+      </div>
+      
+    </div>
+</div>
+<div class="panel panel-default">
+    <div class="panel-heading" id="addnew-export-profile">
+       <a href="/"><b> Hồ sơ </b></a> / Cập nhật thay đổi hộ khẩu
+    </div>
+</div>
+    
+
+            <div class="box box-primary">
+
+               <div class="box box-primary" style="font-size: 12px;margin-bottom: 10px">
+                  <div class="form-group " style="margin-top: 10px;">
+                    <div class="col-sm-4 box-header">
+                      <label  class="col-sm-2 control-label text-right">Trường</label>
+                      <div class="col-sm-10">
+                       <select name="sltSchoolSiteHis" id="sltSchoolSiteHis" class="form-control selectpicker"  data-live-search="true">
+                         <?php 
+                          if(Auth::user()->truong_id !=null && Auth::user()->truong_id != 0 && Auth::user()->truong_id != '0'){
+                            $qlhs_schools = DB::table('qlhs_schools')->where('schools_active','=',1)->whereIn('schools_id',explode('-',Auth::user()->truong_id))->select('schools_id','schools_name')->get();
+                          }else{
+                            $qlhs_schools = DB::table('qlhs_schools')->where('schools_active','=',1)->select('schools_id','schools_name')->get();
+                         }
+                         ?>
+                         <option value="">-- Chọn trường học --</option>
+                         @foreach($qlhs_schools as $val)
+                            <option value="{{$val->schools_id}}" @if($val->schools_id == Auth::user()->truong_id) selected @endif>{{$val->schools_name}}</option>
+                         @endforeach
+                       </select>
+                       <input type="hidden" id="txtSchool_id" value="{{$s_id}}">
+                      </div>
+                    </div>
+                     <div class="col-sm-4">
+
+                    </div>
+                    
+                     <div class="col-sm-4 box-header">
+                      
+                      <div class="box-tools col-sm-8">
+                          <div class="has-feedback">
+                            <input id="txtSearchSiteProfile" type="text" class="form-control input-sm" placeholder="Tìm kiếm ">
+                            <span class="glyphicon glyphicon-search form-control-feedback"></span>
+                            <input type="hidden" id="txtName" value="{{$p_id}}">
+                          </div>
+                        </div>
+                    </div>
+                     
+                </div>  
+                <div class="box-body" style="font-size: 12px">     
+                    <table class="table table-striped table-bordered table-hover dataTable no-footer">
+                        <thead id="dataHeadSite">
+                        
+                 
+                        </thead>
+                        <tbody id="dataSite">                     
+                        </tbody>
+                    </table>
+                    <div class="box-footer clearfix">
+                      <div class="row">
+                          <div class="col-md-2">
+                              <label class="text-right col-md-9 control-label">Tổng </label>
+                              <label class="col-md-3 control-label g_countRowsPaging">0</label>
+                          </div>
+                          <div class="col-md-3">
+                              <label class="col-md-6 control-label text-right">Trang </label>
+                              <div class="col-md-6">
+                                  <select class="form-control input-sm g_selectPaging selectpicker">
+                                      <option value="0">0 / 20 </option>
+                                  </select>
+                              </div>
+                          </div>
+                          <div class="col-md-2">
+                                        <label  class="col-md-6 control-label text-right">Hiển thị: </label>
+                                        <div class="col-md-6">
+                                          <select name="drPagingRegistration" id="drPagingRegistration"  class="form-control input-sm pagination-show-row selectpicker">
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="30">30</option>
+                                            <option value="50">50</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                          <div class="col-md-4">
+                          <label  class="col-md-2 control-label"></label>
+                          <div class="col-md-10">
+                              <ul class="pagination pagination-sm no-margin pull-right g_clickedPaging">
+                                  <li><a>&laquo;</a></li>
+                                  <li><a>0</a></li>
+                                  <li><a>&raquo;</a></li>
+                              </ul>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                </div>       
+            </div>
+          </div>
+          <!-- /.box -->
+        </div>
+        <!-- /.col -->
+      </div>
+      <!-- /.row -->
+    </section>
+
+@endsection
